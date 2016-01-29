@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+</head>
+<body>
+	<input type="text" id='playerId' value="enter id number"><br>
+	<input type="button" onClick='process()' value="go">
+	<script>
+	function process() {
+		var id = document.getElementById('playerId').value;
+		$.getJSON("taster-2-gameData29-01-2016.json", function(obj) {
+			var arr = [];
+			for (var result in obj.results) { // get all results for the id
+				if (obj.results[result].playerId === id) {
+					arr.push(obj.results[result]);
+				}
+			}
+			var duration = 0;
+			for (var result in arr) {  // get the total duration of all waves
+				var waves = JSON.parse(arr[result].waves);
+				for (var wave in waves) {
+					if (!isNaN(waves[wave].duration) && (waves[wave].duration < 10000000)) { // for some reason, one wave has a duration > 10000000, so ignore it
+						duration += waves[wave].duration;
+					}
+				}
+			}
+			var durationInMinutes = ((duration ) / (1000 * 60)).toFixed(2);
+			console.log('playerId ' + id + ' has played for '  + durationInMinutes + ' minutes') // print duration in minutes
+		});
+	}
+	</script>
+</body>
+</html>
