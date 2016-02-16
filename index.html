@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="FILENAME.js"></script>
 </head>
 <body>
 	<input type="text" id='playerId' value="enter id number"><br>
@@ -10,7 +11,7 @@
 	<script>
 	function process() {
 		var id = document.getElementById('playerId').value;
-		$.getJSON("taster-2-gameData29-01-2016.json", function(obj) {
+		$.getJSON(FILENAME, function(obj) {
 			var arr = [];
 			for (var result in obj.results) { // get all results for the id
 				if (obj.results[result].playerId === id) {
