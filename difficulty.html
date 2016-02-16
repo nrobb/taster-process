@@ -27,20 +27,22 @@
 				return new Date(date1) - new Date(date2);
 			});
 			// build a csv file
-			var csv = 'Game,Wave,Total number of creatures,Percentage targets,Uniformity,Success rate\n';
+			var csv = 'Game,Block length,Wave,Total number of creatures,Percentage targets,Uniformity,Success rate\n';
 			for (var game in games) {
 				var waves = JSON.parse(games[game].waves);
 				for (var wave in waves) {
 					var settings = waves[wave].difficultySetting.split(':');
 					csv += (parseInt(game) + 1) + ',' +		  // the game number
+					       games[game].blockLength + ',' +  // the block length
 					       (parseInt(wave) + 1) + ',' +     // the wave number
 					       settings[0] + ',' +		// the total num of creatures
 								 settings[1] + ',' +		// the % targets
 								 settings[2] + ',' +		// the uniformity
-								 waves[wave].successRate + '\n';
+								 waves[wave].successRate + // the success rate
+								 '\n';
 				}
 			}
-			console.log(csv);
+			console.log(csv)
 			saveAs(new Blob([csv], {type: 'txt.plain'}), id + '.csv');
 		});
 	}
