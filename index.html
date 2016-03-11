@@ -2,35 +2,48 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="FILENAME.js"></script>
+<title>TASTER processing tool</title>
+<script lang="javascript" src="vendor/jszip.min.js"></script>
+<script lang="javascript" src="vendor/filesaver.js"></script>
+<script src="Process.js"></script>
 </head>
 <body>
-	<input type="text" id='playerId' value="enter id number"><br>
-	<input type="button" onClick='process()' value="go">
-	<script>
-	function process() {
-		var id = document.getElementById('playerId').value;
-		$.getJSON(FILENAME, function(obj) {
-			var arr = [];
-			for (var result in obj.results) { // get all results for the id
-				if (obj.results[result].playerId === id) {
-					arr.push(obj.results[result]);
-				}
-			}
-			var duration = 0;
-			for (var result in arr) {  // get the total duration of all waves
-				var waves = JSON.parse(arr[result].waves);
-				for (var wave in waves) {
-					if (!isNaN(waves[wave].duration) && (waves[wave].duration < 10000000)) { // for some reason, one wave has a duration > 10000000, so ignore it
-						duration += waves[wave].duration;
-					}
-				}
-			}
-			var durationInMinutes = ((duration ) / (1000 * 60)).toFixed(2);
-			console.log('playerId ' + id + ' has played for '  + durationInMinutes + ' minutes') // print duration in minutes
-		});
-	}
-	</script>
+<form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+  <fieldset>
+     <h2>Load the gameData.json file</h2>
+     <input type='file' id='fileinput'>
+     <input type='button' id='btnLoad' value='Process' onclick='loadFile();'>
+  </fieldset>
+</form>
+<script type="text/javascript">
+  function loadFile() {
+    var input, file, fr;
+    if (typeof window.FileReader !== 'function') {
+      alert("The file API isn't supported.");
+      return;
+    }
+    input = document.getElementById('fileinput');
+    if (!input) {
+      alert("couldn't find the fileinput element.");
+    }
+    else if (!input.files) {
+      alert("This browser doesn't seem to support the `files` property of file inputs.");
+    }
+    else if (!input.files[0]) {
+      alert("Please select a file");
+    }
+    else {
+      file = input.files[0];
+      fr = new FileReader();
+      fr.onload = receivedText;
+      fr.readAsText(file);
+    }
+    function receivedText(e) {
+      lines = e.target.result;
+      var newArr = JSON.parse(lines);
+      PROCESS.process(newArr)
+    }
+  }
+</script>
 </body>
 </html>
