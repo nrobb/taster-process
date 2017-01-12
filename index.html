@@ -3,14 +3,27 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>TASTER processing tool</title>
-<script lang="javascript" src="vendor/jszip.min.js"></script>
-<script lang="javascript" src="vendor/filesaver.js"></script>
-<script src="Process.js"></script>
+<script lang="javascript" src="jszip.min.js"></script>
+<script lang="javascript" src="filesaver.js"></script>
+<script lang="javascript" src="parse.min.js"></script>
+<script lang="javascript" src="Process.js"></script>
 </head>
 <body>
-<form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+<form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post" style="width: 50%">
   <fieldset>
-     <h2>Load the gameData.json file</h2>
+     <h2>Taster processing tool</h2>
+     <p>To process all data from the beginning of time:
+     <ol>
+       <li>Click "Browse", and find the file that contains all data up until 8th Jan 2017 (i.e. before we migrated from Parse). The copy of this file that I sent you is called "gameData-08-01-2017-master"</li>
+       <li>Make sure that the checkbox below is checked (it should be checked by default)</li>
+       <li>Click "Process"</li>
+       <li>Note that you'll always be uploading the exact same file, and you don't ever have to (try to) download the data from back4app. The tool automatically gets all new data (i.e. after Jan 8th 2017) from the server and merges it with the data in the file you upload</li>
+     </ol>
+     <ul>
+       <li>If you ever want to process an individual file (i.e. without merging new data from the server), just uncheck the box below and upload the file as normal</li>
+     </ul>
+   </p>
+ <p><input type="checkbox" id="includeAllData" checked="checked">Include all new data from server (i.e. data saved after Jan 8th 2017)</p>
      <input type='file' id='fileinput'>
      <input type='button' id='btnLoad' value='Process' onclick='loadFile();'>
   </fieldset>
@@ -39,9 +52,64 @@
       fr.readAsText(file);
     }
     function receivedText(e) {
-      lines = e.target.result;
-      var newArr = JSON.parse(lines);
-      PROCESS.process(newArr)
+      // Init parse
+      Parse.initialize("qHh0EHdXGcnd1oGwWbmYN9lStkgMBRPUOVlDdOYF", "NJxfm3sbi0SRfGTQhDs1rPmIpDsGSmJHhCbmvfbC");
+      Parse.serverURL = "https://parseapi.back4app.com";
+      /*******************************/
+      // process the data (old and new)
+      /*******************************/
+      var results = [];
+      function getAllRecords(loopCount) {
+        var limit = 100;
+        // set up the Parse object and query
+        var gameData = Parse.Object.extend("gameData");
+        var query = new Parse.Query(gameData);
+        query.limit(limit);
+        query.skip(limit * loopCount);
+        // run the query
+        query.find({
+          success: function(gameData) {
+            // this recursively builds the new data from parse
+            if (gameData.length > 0) {
+              for (var result in gameData) {
+                results.push(gameData[result]);
+              }
+              loopCount++;
+              getAllRecords(loopCount);
+            } else {
+              for (var result in results) {
+                results[result] = results[result].toJSON();
+              }
+              // this gets the old data, uploaded as a json by the user
+              lines = e.target.result;
+              var oldData = JSON.parse(lines);
+              // this merges the old and new data
+              var merged = [];
+              for (var data in oldData.results) {
+                merged.push(oldData.results[data]);
+              }
+              for (var data in results) {
+                merged.push(results[data]);
+              }
+              // this just puts this merged file into the expected format
+              var allData = {
+                results: merged
+              }
+            }
+            // then process it all
+            if (document.getElementById("includeAllData").checked === true) {
+              PROCESS.process(allData)
+            } else {
+              PROCESS.process(oldData)
+            }
+          },
+          error: function(object, error) {
+            console.error(error.message)
+          }
+        });
+      }
+      // call the recursive function
+      getAllRecords(0);
     }
   }
 </script>
